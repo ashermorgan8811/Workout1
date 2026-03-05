@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Elliptical">
+<meta name="theme-color" content="#0a0a0f">
+<title>Elliptical Tracker</title>
+
+<style>
+:root{--bg:#0a0a0f;--card:#13131a;--border:#1e1e2a;--gold:#e8d5b0;--green:#7ecfa0;--red:#e87070;--muted:#555;--text:#f0ede8;--input-bg:#0f0f18;--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px);--accent:#e8d5b0;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:Georgia,serif;overscroll-behavior:none;}
+#app{display:flex;flex-direction:column;height:100%;height:100dvh;}
+.header{padding:calc(var(--safe-top) + 14px) 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--bg);display:flex;align-items:center;justify-content:space-between;}
+.hsub{font-family:'Courier New', monospace;font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:3px;}
+.htitle{font-family:Georgia, serif;font-size:28px;font-weight:900;letter-spacing:-.02em;line-height:1;}
+.switch-btn{background:#1a1a24;border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-family:'Courier New', monospace;font-size:10px;letter-spacing:.08em;color:var(--gold);cursor:pointer;white-space:nowrap;}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 20px 16px;}
+.tab-bar{display:flex;border-top:1px solid var(--border);padding-bottom:var(--safe-bottom);flex-shrink:0;background:#0d0d14;}
+.tab{flex:1;padding:10px 4px 8px;background:none;border:none;cursor:pointer;color:var(--muted);font-family:'Courier New', monospace;font-size:8px;letter-spacing:.1em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.tab.active{color:var(--accent);}
+.tab-icon{font-size:17px;line-height:1;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.clabel{font-family:'Courier New', monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
+.sval{font-family:Georgia, serif;font-size:28px;font-weight:700;color:var(--gold);line-height:1;}
+.sunit{font-family:'Courier New', monospace;font-size:10px;color:var(--muted);margin-top:3px;}
+.dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.bspeed{font-family:Georgia, serif;font-size:26px;font-weight:900;line-height:1;}
+.pb-badge{background:var(--gold);color:#0a0a0f;font-family:'Courier New', monospace;font-size:8px;padding:2px 6px;border-radius:3px;font-weight:500;}
+.sp-badge{background:#1e2a1e;color:var(--green);border:1px solid #2a4a2a;font-family:'Courier New', monospace;font-size:8px;padding:2px 5px;border-radius:3px;}
+.meta{font-family:'Courier New', monospace;font-size:10px;color:var(--muted);margin-top:5px;line-height:1.6;}
+.splits-inner{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.bar-day{font-family:'Courier New', monospace;font-size:9px;color:var(--muted);width:52px;flex-shrink:0;}
+.bar-track{flex:1;height:18px;background:#1a1a24;border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:2px;}
+.bar-val{font-family:'Courier New', monospace;font-size:10px;color:#888;width:48px;text-align:right;flex-shrink:0;}
+.flabel{font-family:'Courier New', monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#666;margin-bottom:6px;display:block;}
+.fhint{font-family:'Courier New', monospace;font-size:9px;color:#333;margin-top:4px;}
+input[type=text],input[type=number],input[type=date]{background:var(--input-bg);border:1px solid #2a2a3a;border-radius:8px;color:var(--text);font-family:'Courier New', monospace;font-size:20px;padding:13px 14px;width:100%;outline:none;-webkit-appearance:none;appearance:none;letter-spacing:.04em;}
+input[type=date]{font-size:15px;}
+input:focus{border-color:var(--gold);}
+input::placeholder{color:#2e2e3e;font-size:16px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fsec{margin-bottom:14px;}
+.splits-box{background:#0d0d16;border:1px solid #1e1e2e;border-radius:10px;padding:14px;margin-bottom:14px;}
+.preview-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:20px;flex-wrap:wrap;}
+.plbl{font-family:'Courier New', monospace;font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px;}
+.pval{font-family:Georgia, serif;font-size:22px;color:var(--gold);}
+.save-btn{background:var(--gold);color:#0a0a0f;border:none;cursor:pointer;font-family:'Courier New', monospace;font-size:12px;letter-spacing:.15em;text-transform:uppercase;padding:16px;border-radius:10px;width:100%;font-weight:500;margin-top:4px;}
+.save-btn:disabled{opacity:.35;cursor:not-allowed;}
+.cancel-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-family:'Courier New', monospace;font-size:11px;width:100%;padding:12px;margin-top:4px;}
+.hrow{border-bottom:1px solid #1a1a24;padding:14px 0;display:flex;align-items:flex-start;gap:10px;}
+.hrow:last-child{border-bottom:none;}
+.hdate{font-family:'Courier New', monospace;font-size:9px;color:var(--muted);text-transform:uppercase;flex:0 0 52px;padding-top:3px;line-height:1.7;}
+.hspeed{font-family:Georgia, serif;font-size:20px;}
+.hmeta{font-family:'Courier New', monospace;font-size:10px;color:var(--muted);margin-top:3px;}
+.hsplits{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;}
+.hsplit{font-family:'Courier New', monospace;font-size:10px;color:#666;display:flex;align-items:center;gap:4px;}
+.edit-btn{background:none;border:none;cursor:pointer;color:#444;font-family:'Courier New', monospace;font-size:10px;padding:4px 6px;}
+.del-btn{background:none;border:none;cursor:pointer;color:#333;font-size:16px;padding:4px 6px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;}
+.picker-card{background:#13131a;border:1px solid var(--border);border-radius:16px;padding:28px 24px;width:100%;max-width:340px;}
+.user-btn{width:100%;background:#0f0f18;border:1px solid #2a2a3a;border-radius:10px;padding:16px 18px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;}
+.user-btn:last-child{margin-bottom:0;}
+.user-btn:active{border-color:var(--gold);}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.fmember{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.fstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.fstat{background:#0f0f18;border-radius:8px;padding:10px;}
+.fstatval{font-family:Georgia, serif;font-size:20px;color:var(--gold);line-height:1;}
+.fstatlbl{font-family:'Courier New', monospace;font-size:8px;color:var(--muted);margin-top:3px;text-transform:uppercase;}
+.lboard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.lrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #1a1a24;}
+.lrow:last-child{border-bottom:none;}
+.empty{text-align:center;padding:40px 20px;}
+.toast{position:fixed;bottom:calc(var(--safe-bottom) + 72px);left:50%;transform:translateX(-50%);background:var(--green);color:#0a0a0f;font-family:'Courier New', monospace;font-size:11px;letter-spacing:.12em;padding:10px 22px;border-radius:20px;font-weight:500;z-index:99;white-space:nowrap;display:none;}
+::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div>
+      <div class="hsub" id="hsub">Personal Tracker</div>
+      <div class="htitle">Elliptical</div>
+    </div>
+    <button class="switch-btn" id="btn-switch">Switch User</button>
+  </div>
+  <div class="scroll-area" id="scroll-area"></div>
+  <div class="tab-bar">
+    <button class="tab active" id="tab-dashboard"><span class="tab-icon">&#x1F4CA;</span>Overview</button>
+    <button class="tab" id="tab-log"><span class="tab-icon">+</span>Log</button>
+    <button class="tab" id="tab-history"><span class="tab-icon">&#x1F4CB;</span>History</button>
+    <button class="tab" id="tab-family"><span class="tab-icon">&#x1F46A;</span>Family</button>
+  </div>
+</div>
+<div id="overlay" class="overlay" style="display:none"></div>
+<div class="toast" id="toast">Session saved</div>
+<script>
+(function() {
+  "use strict";
+
+  var USERS = [
+    { id: "asher",  name: "Asher",  emoji: "&#x1F3C3;", color: "#e8d5b0" },
+    { id: "eli",    name: "Eli",    emoji: "&#x26A1;",   color: "#7ecfa0" },
+    { id: "hayley", name: "Hayley", emoji: "&#x1F31F;",  color: "#c9a0dc" }
+  ];
+
+  var KP = "ell_v6_";
+  var KU = "ell_user";
+
+  var uid  = localStorage.getItem(KU) || null;
+  var view = "dashboard";
+  var editId = null;
+  var form = newForm();
+
+  function newForm() {
+    return { date: today(), duration: "30:00", miles: "", mile1: "", mile2: "", notes: "" };
+  }
+  function today() { return new Date().toISOString().split("T")[0]; }
+  function getUser(id) { for (var i = 0; i < USERS.length; i++) { if (USERS[i].id === id) return USERS[i]; } return null; }
+  function loadW(id) { try { return JSON.parse(localStorage.getItem(KP + id)) || []; } catch(e) { return []; } }
+  function saveW(id, d) { try { localStorage.setItem(KP + id, JSON.stringify(d)); } catch(e) {} }
+
+  var wk = uid ? loadW(uid) : [];
+
+  /* ---- user switching ---- */
+  function switchTo(id) {
+    uid = id;
+    localStorage.setItem(KU, id);
+    wk = loadW(id);
+    editId = null;
+    form = newForm();
+    var u = getUser(id);
+    document.documentElement.style.setProperty("--accent", u.color);
+    hideOverlay();
+    setView("dashboard");
+  }
+
+  function showOverlay() {
+    var el = document.getElementById("overlay");
+    el.innerHTML = pickerHTML();
+    el.style.display = "flex";
+    for (var i = 0; i < USERS.length; i++) {
+      (function(u) {
+        var btn = document.getElementById("pu-" + u.id);
+        if (btn) btn.addEventListener("click", function() { switchTo(u.id); });
+      })(USERS[i]);
+    }
+  }
+  function hideOverlay() { document.getElementById("overlay").style.display = "none"; }
+
+  function pickerHTML() {
+    var h = '<div class="picker-card">'
+      + '<div style="font-family:serif;font-size:26px;font-weight:900;margin-bottom:6px">Who are you?</div>'
+      + '<div style="font-family:monospace;font-size:10px;color:var(--muted);letter-spacing:.1em;margin-bottom:24px">TAP YOUR NAME TO CONTINUE</div>';
+    for (var i = 0; i < USERS.length; i++) {
+      var u = USERS[i];
+      var ws = loadW(u.id);
+      var pb = null;
+      for (var j = 0; j < ws.length; j++) { if (!pb || ws[j].speed > pb.speed) pb = ws[j]; }
+      h += '<button class="user-btn" id="pu-' + u.id + '">'
+        + '<div class="avatar" style="background:' + u.color + '22;border:1.5px solid ' + u.color + '40">' + u.emoji + '</div>'
+        + '<div><div style="font-family:serif;font-size:20px;color:var(--text)">' + u.name + '</div>'
+        + '<div style="font-family:monospace;font-size:9px;color:var(--muted);margin-top:2px">'
+        + (ws.length ? ws.length + " sessions - PB " + (pb ? pb.speed : "--") + " mph" : "No sessions yet")
+        + '</div></div></button>';
+    }
+    return h + '</div>';
+  }
+
+  document.getElementById("btn-switch").addEventListener("click", showOverlay);
+  if (!uid) {
+    showOverlay();
+  } else {
+    var u0 = getUser(uid);
+    if (u0) document.documentElement.style.setProperty("--accent", u0.color);
+  }
+
+  /* ---- time helpers ---- */
+  function parseT(s) {
+    if (!s || !s.trim()) return null;
+    var p = s.trim().split(":");
+    if (p.length === 2) {
+      var m = parseInt(p[0], 10), sc = parseInt(p[1], 10);
+      if (isNaN(m) || isNaN(sc) || sc >= 60) return null;
+      return m + sc / 60;
+    }
+    var n = parseFloat(s);
+    return isNaN(n) ? null : n;
+  }
+  function fmtT(d) {
+    if (d == null || isNaN(d)) return "--";
+    var m = Math.floor(d), s = Math.round((d - m) * 60);
+    if (s === 60) { m++; s = 0; }
+    return m + ":" + (s < 10 ? "0" : "") + s;
+  }
+  function pace(d, mi) { return (!mi || !d) ? "--" : fmtT(d / mi); }
+  function spd(d, mi)  { return (!d || d === 0) ? null : ((mi / d) * 60).toFixed(2); }
+  function validT(s) {
+    if (!s) return false;
+    var p = s.split(":");
+    if (p.length !== 2 || p[1].length !== 2) return false;
+    var m = parseInt(p[0], 10), sc = parseInt(p[1], 10);
+    return !isNaN(m) && !isNaN(sc) && sc < 60;
+  }
+  function autoT(val, prev) {
+    var d = val.replace(/\D/g, "");
+    if (!d.length) return "";
+    if (val.length < (prev || "").length) return val.replace(/[^0-9:]/g, "");
+    if (d.length <= 2) return d;
+    return d.slice(0, 2) + ":" + d.slice(2, 4);
+  }
+  function esc(s) {
+    return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function dayLabel(ds) {
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    var d = new Date(ds + "T12:00:00"); d.setHours(0, 0, 0, 0);
+    var diff = Math.round((now - d) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
+  /* ---- data helpers ---- */
+  function sorted(ws) {
+    return (ws || wk).slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+  }
+  function pb(ws) {
+    var s = (ws || wk).slice().sort(function(a, b) { return b.speed - a.speed; });
+    return s.length ? s[0] : null;
+  }
+  function totalMi(ws) { return (ws || wk).reduce(function(a, w) { return a + w.miles; }, 0).toFixed(1); }
+  function bestSplit(key, ws) {
+    var f = (ws || wk).filter(function(w) { return w[key] != null; });
+    return f.length ? f.reduce(function(b, w) { return w[key] < b[key] ? w : b; }) : null;
+  }
+  function streak(ws) {
+    var ww = ws || wk;
+    if (!ww.length) return 0;
+    var s = sorted(ww), str = 0, cur = new Date(); cur.setHours(0, 0, 0, 0);
+    for (var i = 0; i < s.length; i++) {
+      var d = new Date(s[i].date + "T12:00:00"); d.setHours(0, 0, 0, 0);
+      var diff = Math.round((cur - d) / 86400000);
+      if (diff === str) str++; else if (diff > str) break;
+    }
+    return str;
+  }
+
+  /* ---- countdown + missed (from March 1) ---- */
+  function daysLeft() {
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    var goal = new Date(now.getFullYear(), 7, 15); // Aug 15
+    if (goal <= now) goal = new Date(now.getFullYear() + 1, 7, 15);
+    return Math.round((goal - now) / 86400000);
+  }
+  function missedDays(ws) {
+    var ww = ws || wk;
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    var start = new Date(now.getFullYear(), 2, 1); // March 1
+    start.setHours(0, 0, 0, 0);
+    if (now < start) return 0;
+    var total = Math.round((now - start) / 86400000) + 1;
+    var logged = {};
+    for (var i = 0; i < ww.length; i++) { logged[ww[i].date] = true; }
+    var missed = 0;
+    for (var j = 0; j < total; j++) {
+      var d = new Date(start.getTime() + j * 86400000);
+      var ds = d.toISOString().split("T")[0];
+      if (!logged[ds]) missed++;
+    }
+    return missed;
+  }
+  function challengePct() {
+    var now = new Date(); now.setHours(0, 0, 0, 0);
+    var start = new Date(now.getFullYear(), 2, 1);  // March 1
+    var end   = new Date(now.getFullYear(), 7, 15); // Aug 15
+    start.setHours(0, 0, 0, 0); end.setHours(0, 0, 0, 0);
+    if (now < start) return 0;
+    if (now >= end) return 100;
+    return Math.round(((now - start) / (end - start)) * 100);
+  }
+
+  function cdCard(ws) {
+    var dl = daysLeft();
+    var md = missedDays(ws);
+    var pct = challengePct();
+    var ww = ws || wk;
+    var total = ww.length + md;
+    var att = total > 0 ? Math.round((ww.length / total) * 100) : 100;
+    var mc = md === 0 ? "var(--green)" : md <= 3 ? "var(--gold)" : "var(--red)";
+    var ml = md === 0 ? "perfect!" : att + "% attendance";
+    return '<div class="card" style="margin-bottom:12px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">'
+        + '<div>'
+          + '<div class="clabel" style="margin-bottom:4px">Countdown - Aug 15</div>'
+          + '<div style="font-family:serif;font-size:44px;font-weight:900;color:var(--gold);line-height:1">' + dl + '</div>'
+          + '<div style="font-family:monospace;font-size:10px;color:var(--muted);margin-top:3px">days remaining</div>'
+        + '</div>'
+        + '<div style="text-align:right">'
+          + '<div class="clabel" style="margin-bottom:4px">Days Missed</div>'
+          + '<div style="font-family:serif;font-size:44px;font-weight:900;line-height:1;color:' + mc + '">' + md + '</div>'
+          + '<div style="font-family:monospace;font-size:10px;color:var(--muted);margin-top:3px">' + ml + '</div>'
+        + '</div>'
+      + '</div>'
+      + '<div style="font-family:monospace;font-size:9px;color:var(--muted);margin-bottom:5px;letter-spacing:.1em;text-transform:uppercase">Challenge progress (Mar 1 - Aug 15)</div>'
+      + '<div style="height:7px;background:#1a1a24;border-radius:4px;overflow:hidden">'
+        + '<div style="height:100%;width:' + pct + '%;background:var(--gold);border-radius:4px"></div>'
+      + '</div>'
+      + '<div style="font-family:monospace;font-size:9px;color:#444;margin-top:4px;text-align:right">' + pct + '% of challenge done</div>'
+      + '</div>';
+  }
+
+  /* ---- navigation ---- */
+  function setView(v) {
+    view = v;
+    var tabs = ["dashboard", "log", "history", "family"];
+    for (var i = 0; i < tabs.length; i++) {
+      var el = document.getElementById("tab-" + tabs[i]);
+      if (el) el.className = "tab" + (tabs[i] === v ? " active" : "");
+    }
+    render();
+    document.getElementById("scroll-area").scrollTop = 0;
+  }
+  document.getElementById("tab-dashboard").addEventListener("click", function() { setView("dashboard"); });
+  document.getElementById("tab-log").addEventListener("click", function() { editId = null; form = newForm(); setView("log"); });
+  document.getElementById("tab-history").addEventListener("click", function() { setView("history"); });
+  document.getElementById("tab-family").addEventListener("click", function() { setView("family"); });
+
+  function render() {
+    if (!uid) return;
+    var area = document.getElementById("scroll-area");
+    if      (view === "dashboard") { area.innerHTML = renderDash(); }
+    else if (view === "log")       { area.innerHTML = renderLog();  attachLog(); }
+    else if (view === "history")   { area.innerHTML = renderHist(); }
+    else                           { area.innerHTML = renderFam();  }
+    attachCommon();
+    var u = getUser(uid);
+    document.getElementById("hsub").textContent = u ? u.name.toUpperCase() : "PERSONAL TRACKER";
+  }
+
+  /* ---- dashboard ---- */
+  function renderDash() {
+    var p = pb(), bm1 = bestSplit("mile1"), bm2 = bestSplit("mile2");
+    var s = sorted(), str = streak();
+    var last7 = s.slice(0, 7), prev7 = s.slice(7, 14);
+    var avg7 = last7.length ? (last7.reduce(function(a, w) { return a + w.speed; }, 0) / last7.length).toFixed(2) : null;
+    var avgP = prev7.length ? (prev7.reduce(function(a, w) { return a + w.speed; }, 0) / prev7.length).toFixed(2) : null;
+    var imp  = avg7 && avgP ? (((avg7 - avgP) / avgP) * 100).toFixed(1) : null;
+    var chartMax = p ? Math.ceil(p.speed * 1.15) : 8;
+    var l = s[0] || null;
+
+    var h = cdCard();
+
+    if (!wk.length) {
+      h += '<div class="empty">'
+        + '<div style="font-family:serif;font-size:22px;color:#444;margin-bottom:8px">No sessions yet</div>'
+        + '<div style="font-family:monospace;font-size:10px;color:#333;margin-bottom:20px">Log your first workout</div>'
+        + '<button class="save-btn" style="width:auto;padding:14px 32px" id="btn-goto-log">Log Session</button>'
+        + '</div>';
+      return h;
+    }
+
+    h += '<div class="stats-grid">'
+      + statBox("Sessions", wk.length, "")
+      + statBox("Total Miles", totalMi(), "mi")
+      + statBox("Streak", str, "days")
+      + statBox("Personal Best", p ? p.speed : "--", p ? "mph" : "")
+      + '</div>';
+
+    if (p && l) {
+      h += '<div class="dual-grid">';
+      h += '<div class="card" style="border-color:#2a2a1a">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        + '<div class="clabel" style="margin:0">Personal Best</div><span class="pb-badge">PB</span></div>'
+        + '<div class="bspeed" style="color:var(--gold)">' + p.speed + '<span style="font-size:12px;font-weight:400;color:#888"> mph</span></div>'
+        + '<div class="meta">' + p.miles + ' mi &middot; ' + fmtT(p.minutes) + '<br>' + dayLabel(p.date) + ' &middot; ' + pace(p.minutes, p.miles) + '/mi</div>'
+        + splitBlock(p, bm1, bm2, true) + '</div>';
+
+      var pctStr = l.id !== p.id
+        ? '<div style="font-family:monospace;font-size:10px;color:' + (l.speed >= p.speed * 0.97 ? "var(--green)" : "#888") + ';margin-top:4px">'
+          + ((l.speed / p.speed) * 100).toFixed(0) + '% of PB</div>'
+        : "";
+      h += '<div class="card">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        + '<div class="clabel" style="margin:0">Latest</div>' + (l.id === p.id ? '<span class="pb-badge">PB</span>' : "") + '</div>'
+        + '<div class="bspeed" style="color:' + (l.speed >= p.speed ? "var(--green)" : "var(--text)") + '">' + l.speed + '<span style="font-size:12px;font-weight:400;color:#888"> mph</span></div>'
+        + '<div class="meta">' + l.miles + ' mi &middot; ' + fmtT(l.minutes) + '<br>' + dayLabel(l.date) + ' &middot; ' + pace(l.minutes, l.miles) + '/mi</div>'
+        + pctStr + splitBlock(l, bm1, bm2, false) + '</div>';
+      h += '</div>';
+    }
+
+    if (bm1 || bm2) {
+      h += '<div class="card"><div class="clabel">Best Splits</div><div style="display:flex;gap:24px;flex-wrap:wrap">';
+      if (bm1) h += '<div><div style="font-family:monospace;font-size:9px;color:var(--muted)">Mile 1</div><div style="font-family:serif;font-size:22px;color:var(--green)">' + fmtT(bm1.mile1) + '</div><div style="font-family:monospace;font-size:9px;color:#444">' + dayLabel(bm1.date) + '</div></div>';
+      if (bm2) h += '<div><div style="font-family:monospace;font-size:9px;color:var(--muted)">Mile 2</div><div style="font-family:serif;font-size:22px;color:var(--green)">' + fmtT(bm2.mile2) + '</div><div style="font-family:monospace;font-size:9px;color:#444">' + dayLabel(bm2.date) + '</div></div>';
+      h += '</div></div>';
+    }
+
+    if (imp !== null) {
+      var up = parseFloat(imp) >= 0;
+      h += '<div class="card"><div class="clabel">7-Day Trend</div><div style="display:flex;gap:28px;flex-wrap:wrap">'
+        + '<div><div style="font-family:monospace;font-size:9px;color:var(--muted);margin-bottom:3px">Last 7 avg</div><div style="font-family:serif;font-size:24px;color:var(--gold)">' + avg7 + ' mph</div></div>'
+        + '<div><div style="font-family:monospace;font-size:9px;color:var(--muted);margin-bottom:3px">vs prev 7</div><div style="font-family:serif;font-size:24px;color:' + (up ? "var(--green)" : "var(--red)") + '">' + (up ? "+" : "") + imp + '%</div></div>'
+        + '</div></div>';
+    }
+
+    if (s.length) {
+      h += '<div class="card"><div class="clabel" style="margin-bottom:12px">Speed Over Time</div>';
+      var top = s.slice(0, 10);
+      for (var i = 0; i < top.length; i++) {
+        var w = top[i];
+        var isPB = p && w.id === p.id;
+        var col = isPB ? "var(--gold)" : (i === 0 ? "var(--green)" : "#3a3a5a");
+        h += '<div class="bar-row">'
+          + '<div class="bar-day">' + dayLabel(w.date) + '</div>'
+          + '<div class="bar-track"><div class="bar-fill" style="width:' + ((w.speed / chartMax) * 100).toFixed(1) + '%;background:' + col + '"></div></div>'
+          + '<div class="bar-val" style="color:' + (isPB ? "var(--gold)" : "#888") + '">' + w.speed + '</div>'
+          + '</div>';
+      }
+      h += '<div style="display:flex;gap:14px;margin-top:10px">'
+        + '<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;background:var(--gold);border-radius:2px"></div><span style="font-family:monospace;font-size:9px;color:var(--muted)">PB</span></div>'
+        + '<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;background:var(--green);border-radius:2px"></div><span style="font-family:monospace;font-size:9px;color:var(--muted)">Latest</span></div>'
+        + '</div></div>';
+    }
+    return h;
+  }
+
+  function statBox(label, val, unit) {
+    return '<div class="sbox"><div class="clabel">' + label + '</div><div class="sval">' + val + '</div>' + (unit ? '<div class="sunit">' + unit + '</div>' : "") + '</div>';
+  }
+  function splitBlock(w, bm1, bm2, gold) {
+    if (w.mile1 == null && w.mile2 == null) return "";
+    var c = gold ? "var(--gold)" : "#aaa";
+    var h = '<div class="splits-inner">';
+    if (w.mile1 != null) {
+      var b1 = bm1 && w.id === bm1.id;
+      h += '<div><div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Mile 1</div>'
+        + '<div style="font-family:monospace;font-size:13px;color:' + c + ';display:flex;align-items:center;gap:5px">' + fmtT(w.mile1) + (b1 ? '<span class="sp-badge">best</span>' : "") + '</div></div>';
+    }
+    if (w.mile2 != null) {
+      var b2 = bm2 && w.id === bm2.id;
+      h += '<div><div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Mile 2</div>'
+        + '<div style="font-family:monospace;font-size:13px;color:' + c + ';display:flex;align-items:center;gap:5px">' + fmtT(w.mile2) + (b2 ? '<span class="sp-badge">best</span>' : "") + '</div></div>';
+    }
+    if (w.mile1 != null && w.mile2 != null) {
+      h += '<div><div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Split</div>'
+        + '<div style="font-family:monospace;font-size:13px;color:#888">' + fmtT(w.mile2 - w.mile1) + '</div></div>';
+    }
+    return h + '</div>';
+  }
+
+  /* ---- family ---- */
+  function renderFam() {
+    var all = [];
+    for (var i = 0; i < USERS.length; i++) {
+      var u = USERS[i];
+      var ws = loadW(u.id);
+      var p2 = pb(ws);
+      all.push({ user: u, ws: ws, pb: p2, total: totalMi(ws), str: streak(ws), missed: missedDays(ws) });
+    }
+    var ranked = all.filter(function(d) { return d.pb; }).slice().sort(function(a, b) { return b.pb.speed - a.pb.speed; });
+    var maxSpd = ranked.length ? ranked[0].pb.speed : 0;
+    var maxMi2 = 0;
+    for (var k = 0; k < all.length; k++) { var v = parseFloat(all[k].total); if (v > maxMi2) maxMi2 = v; }
+
+    var h = '<div style="font-family:serif;font-size:26px;font-weight:700;margin-bottom:16px">Family</div>';
+
+    if (ranked.length) {
+      h += '<div class="lboard"><div class="clabel">Speed Leaderboard</div>';
+      for (var r = 0; r < ranked.length; r++) {
+        var d = ranked[r];
+        var medal = r === 0 ? "&#x1F947;" : r === 1 ? "&#x1F948;" : "&#x1F949;";
+        h += '<div class="lrow">'
+          + '<div style="font-size:22px;width:28px;flex-shrink:0">' + medal + '</div>'
+          + '<div style="display:flex;align-items:center;gap:8px;flex:1">'
+          + '<span style="font-family:serif;font-size:16px;color:' + d.user.color + '">' + d.user.name + '</span></div>'
+          + '<div style="font-family:monospace;font-size:12px;color:var(--gold)">' + d.pb.speed + ' mph</div></div>';
+      }
+      h += '</div>';
+    }
+
+    for (var m = 0; m < all.length; m++) {
+      var dd = all[m], uu = dd.user;
+      var mc2 = dd.missed === 0 ? "var(--green)" : dd.missed <= 3 ? "var(--gold)" : "var(--red)";
+      h += '<div class="fmember" style="border-color:' + uu.color + '30">'
+        + '<div style="font-family:serif;font-size:20px;font-weight:700;margin-bottom:12px;color:' + uu.color + '">' + uu.name + '</div>';
+      if (dd.ws.length) {
+        h += '<div class="fstats">'
+          + '<div class="fstat"><div class="fstatval">' + dd.pb.speed + '</div><div class="fstatlbl">Best mph</div></div>'
+          + '<div class="fstat"><div class="fstatval">' + dd.total + '</div><div class="fstatlbl">Miles</div></div>'
+          + '<div class="fstat"><div class="fstatval" style="color:' + mc2 + '">' + dd.missed + '</div><div class="fstatlbl">Missed</div></div>'
+          + '</div>';
+        if (maxSpd > 0) {
+          h += '<div style="margin-bottom:8px"><div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Speed vs best</div>'
+            + '<div style="height:8px;background:#1a1a24;border-radius:4px;overflow:hidden">'
+            + '<div style="height:100%;width:' + ((dd.pb.speed / maxSpd) * 100).toFixed(1) + '%;background:' + uu.color + ';border-radius:4px"></div></div></div>';
+        }
+        if (maxMi2 > 0) {
+          h += '<div style="margin-bottom:8px"><div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Miles vs most</div>'
+            + '<div style="height:8px;background:#1a1a24;border-radius:4px;overflow:hidden">'
+            + '<div style="height:100%;width:' + ((parseFloat(dd.total) / maxMi2) * 100).toFixed(1) + '%;background:' + uu.color + '88;border-radius:4px"></div></div></div>';
+        }
+        var rec = sorted(dd.ws).slice(0, 3);
+        h += '<div style="margin-top:6px;padding-top:10px;border-top:1px solid #1a1a24">'
+          + '<div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Recent Sessions</div>';
+        for (var n = 0; n < rec.length; n++) {
+          var rw = rec[n];
+          h += '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #111">'
+            + '<div style="font-family:monospace;font-size:9px;color:var(--muted)">' + dayLabel(rw.date) + '</div>'
+            + '<div style="font-family:serif;font-size:14px;color:' + uu.color + '">' + rw.speed + ' mph</div>'
+            + '<div style="font-family:monospace;font-size:9px;color:#444">' + rw.miles + ' mi &middot; ' + fmtT(rw.minutes) + '</div></div>';
+        }
+        h += '</div>';
+      } else {
+        h += '<div style="font-family:monospace;font-size:10px;color:#333">No sessions yet</div>';
+      }
+      h += '</div>';
+    }
+    return h;
+  }
+
+  /* ---- log ---- */
+  function renderLog() {
+    return '<div style="font-family:serif;font-size:26px;font-weight:700;margin-bottom:20px">' + (editId ? "Edit Session" : "Log Session") + '</div>'
+      + '<div class="fsec"><label class="flabel">Date</label><input type="date" id="f-date" value="' + esc(form.date) + '"></div>'
+      + '<div class="two-col fsec">'
+        + '<div><label class="flabel">Duration</label><input type="text" id="f-dur" inputmode="numeric" maxlength="5" placeholder="30:00" value="' + esc(form.duration) + '"><div class="fhint">MM:SS</div></div>'
+        + '<div><label class="flabel">Distance (mi)</label><input type="number" id="f-miles" inputmode="decimal" placeholder="2.50" value="' + esc(form.miles) + '" step="0.01" min="0"></div>'
+      + '</div>'
+      + '<div class="splits-box">'
+        + '<div style="font-family:monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Mile Splits <span style="color:#2e2e3e;font-weight:300;text-transform:none;letter-spacing:0">(optional)</span></div>'
+        + '<div class="two-col">'
+          + '<div><label class="flabel">Mile 1 time</label><input type="text" id="f-mi1" inputmode="numeric" maxlength="5" placeholder="13:30" value="' + esc(form.mile1) + '"><div class="fhint">Time to reach 1 mi</div></div>'
+          + '<div><label class="flabel">Mile 2 time</label><input type="text" id="f-mi2" inputmode="numeric" maxlength="5" placeholder="27:00" value="' + esc(form.mile2) + '"><div class="fhint">Cumulative at 2 mi</div></div>'
+        + '</div>'
+        + '<div id="sp-preview"></div>'
+      + '</div>'
+      + '<div id="ov-preview"></div>'
+      + '<div class="fsec"><label class="flabel">Notes (optional)</label><input type="text" id="f-notes" placeholder="How did it feel?" value="' + esc(form.notes) + '" style="font-size:15px"></div>'
+      + '<button class="save-btn" id="btn-save" ' + (form.miles && validT(form.duration) ? "" : "disabled") + '>' + (editId ? "Update Session" : "Save Session") + '</button>'
+      + (editId ? '<button class="cancel-btn" id="btn-cancel">Cancel</button>' : "")
+      + '<div style="height:8px"></div>';
+  }
+
+  function updatePreviews() {
+    var p2 = pb(), bm1 = bestSplit("mile1"), bm2 = bestSplit("mile2");
+    var ld = parseT(form.duration), lm = parseFloat(form.miles) || null;
+    var lm1 = parseT(form.mile1), lm2 = parseT(form.mile2);
+    var lsp = ld && lm ? spd(ld, lm) : null;
+    var lspl = lm1 && lm2 ? lm2 - lm1 : null;
+
+    var sp = document.getElementById("sp-preview");
+    if (sp) {
+      if (lm1 || lm2) {
+        var sh = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">';
+        if (lm1) {
+          var ib1 = bm1 && lm1 <= bm1.mile1;
+          sh += '<div>'
+            + '<div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Mile 1</div>'
+            + '<div style="font-family:serif;font-size:20px;color:var(--gold)">' + fmtT(lm1) + '</div>'
+            + (bm1 ? '<div style="font-family:monospace;font-size:9px;color:' + (ib1 ? "var(--green)" : "#444") + ';margin-top:1px">' + (ib1 ? "New best!" : "Best: " + fmtT(bm1.mile1)) + '</div>' : "")
+            + '</div>';
+        }
+        if (lm2) {
+          var ib2 = bm2 && lm2 <= bm2.mile2;
+          sh += '<div>'
+            + '<div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Mile 2 (cum.)</div>'
+            + '<div style="font-family:serif;font-size:20px;color:var(--gold)">' + fmtT(lm2) + '</div>'
+            + (bm2 ? '<div style="font-family:monospace;font-size:9px;color:' + (ib2 ? "var(--green)" : "#444") + ';margin-top:1px">' + (ib2 ? "New best!" : "Best: " + fmtT(bm2.mile2)) + '</div>' : "")
+            + '</div>';
+        }
+        if (lspl && lspl > 0) {
+          sh += '<div>'
+            + '<div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Mi 2 Split</div>'
+            + '<div style="font-family:serif;font-size:20px;color:#888">' + fmtT(lspl) + '</div>'
+            + '</div>';
+        }
+        sp.innerHTML = sh + '</div>';
+      } else { sp.innerHTML = ""; }
+    }
+
+    var op = document.getElementById("ov-preview");
+    if (op) {
+      if (lsp && lm) {
+        var vp = p2 ? (parseFloat(lsp) >= p2.speed ? "New PB!" : ((parseFloat(lsp) / p2.speed) * 100).toFixed(0) + "%") : "";
+        op.innerHTML = '<div class="preview-box">'
+          + '<div><div class="plbl">Avg Speed</div><div class="pval">' + lsp + ' <span style="font-size:13px;color:#888">mph</span></div></div>'
+          + '<div><div class="plbl">Avg Pace</div><div class="pval">' + pace(ld, lm) + ' <span style="font-size:13px;color:#888">/mi</span></div></div>'
+          + (p2 ? '<div><div class="plbl">vs PB</div><div class="pval" style="color:' + (parseFloat(lsp) >= p2.speed ? "var(--green)" : "") + '">' + vp + '</div></div>' : "")
+          + '</div>';
+      } else { op.innerHTML = ""; }
+    }
+
+    var btn = document.getElementById("btn-save");
+    if (btn) btn.disabled = !(form.miles && validT(form.duration));
+  }
+
+  function attachLog() {
+    var fD  = document.getElementById("f-date");
+    var fDu = document.getElementById("f-dur");
+    var fMi = document.getElementById("f-miles");
+    var fM1 = document.getElementById("f-mi1");
+    var fM2 = document.getElementById("f-mi2");
+    var fNo = document.getElementById("f-notes");
+    var bS  = document.getElementById("btn-save");
+    var bC  = document.getElementById("btn-cancel");
+
+    if (fD)  fD.addEventListener("change", function() { form.date = this.value; });
+    if (fNo) fNo.addEventListener("input",  function() { form.notes = this.value; });
+    if (fMi) fMi.addEventListener("input",  function() { form.miles = this.value; updatePreviews(); });
+
+    function wireTime(el, key) {
+      if (!el) return;
+      el.addEventListener("input", function() {
+        var nv = autoT(this.value, form[key]);
+        form[key] = nv;
+        if (this.value !== nv) this.value = nv;
+        updatePreviews();
+      });
+    }
+    wireTime(fDu, "duration");
+    wireTime(fM1, "mile1");
+    wireTime(fM2, "mile2");
+
+    if (bS) bS.addEventListener("click", doSave);
+    if (bC) bC.addEventListener("click", function() { editId = null; form = newForm(); setView("history"); });
+  }
+
+  /* ---- history ---- */
+  function renderHist() {
+    var s = sorted(), p2 = pb(), bm1 = bestSplit("mile1"), bm2 = bestSplit("mile2");
+    if (!s.length) return '<div class="empty"><div style="font-family:serif;font-size:22px;color:#444">No sessions yet</div></div>';
+    var h = '<div style="font-family:serif;font-size:26px;font-weight:700;margin-bottom:16px">All Sessions</div>';
+    for (var i = 0; i < s.length; i++) {
+      var w = s[i];
+      var isPB = p2 && w.id === p2.id;
+      var ib1 = bm1 && w.id === bm1.id;
+      var ib2 = bm2 && w.id === bm2.id;
+      h += '<div class="hrow">'
+        + '<div class="hdate">' + dayLabel(w.date) + '<br><span style="color:#2a2a3a;font-size:8px">' + w.date + '</span></div>'
+        + '<div style="flex:1">'
+          + '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'
+            + '<span class="hspeed" style="color:' + (isPB ? "var(--gold)" : "var(--text)") + '">' + w.speed + ' <span style="font-size:13px;color:#888">mph</span></span>'
+            + (isPB ? '<span class="pb-badge">PB</span>' : "")
+          + '</div>'
+          + '<div class="hmeta">' + w.miles + ' mi &middot; ' + fmtT(w.minutes) + ' &middot; ' + pace(w.minutes, w.miles) + '/mi</div>';
+      if (w.mile1 != null || w.mile2 != null) {
+        h += '<div class="hsplits">';
+        if (w.mile1 != null) h += '<div class="hsplit"><span style="color:#3a3a4a">Mi 1:</span><span style="color:' + (ib1 ? "var(--green)" : "#666") + '">' + fmtT(w.mile1) + '</span>' + (ib1 ? '<span class="sp-badge">best</span>' : "") + '</div>';
+        if (w.mile2 != null) h += '<div class="hsplit"><span style="color:#3a3a4a">Mi 2:</span><span style="color:' + (ib2 ? "var(--green)" : "#666") + '">' + fmtT(w.mile2) + '</span>' + (ib2 ? '<span class="sp-badge">best</span>' : "") + '</div>';
+        if (w.mile1 != null && w.mile2 != null) h += '<div class="hsplit"><span style="color:#3a3a4a">split:</span>' + fmtT(w.mile2 - w.mile1) + '</div>';
+        h += '</div>';
+      }
+      if (w.notes) h += '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:4px;font-style:italic">&ldquo;' + esc(w.notes) + '&rdquo;</div>';
+      h += '</div>'
+        + '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">'
+          + '<button class="edit-btn" data-edit="' + w.id + '">edit</button>'
+          + '<button class="del-btn" data-del="' + w.id + '">&times;</button>'
+        + '</div></div>';
+    }
+    return h;
+  }
+
+  function attachCommon() {
+    var g = document.getElementById("btn-goto-log");
+    if (g) g.addEventListener("click", function() { form = newForm(); setView("log"); });
+    var edits = document.querySelectorAll("[data-edit]");
+    for (var i = 0; i < edits.length; i++) {
+      (function(btn) { btn.addEventListener("click", function() { startEdit(parseInt(this.getAttribute("data-edit"), 10)); }); })(edits[i]);
+    }
+    var dels = document.querySelectorAll("[data-del]");
+    for (var j = 0; j < dels.length; j++) {
+      (function(btn) { btn.addEventListener("click", function() { delW(parseInt(this.getAttribute("data-del"), 10)); }); })(dels[j]);
+    }
+  }
+
+  function doSave() {
+    var dur = parseT(form.duration);
+    if (!form.miles || !dur) return;
+    var entry = {
+      id: editId || Date.now(),
+      date: form.date,
+      minutes: dur,
+      miles: parseFloat(form.miles),
+      mile1: parseT(form.mile1),
+      mile2: parseT(form.mile2),
+      notes: form.notes,
+      speed: parseFloat(spd(dur, parseFloat(form.miles)))
+    };
+    if (editId) { wk = wk.map(function(w) { return w.id === editId ? entry : w; }); editId = null; }
+    else { wk.unshift(entry); }
+    saveW(uid, wk);
+    form = newForm();
+    showToast();
+    setView("dashboard");
+  }
+
+  function delW(id) {
+    if (confirm("Delete this session?")) {
+      wk = wk.filter(function(w) { return w.id !== id; });
+      saveW(uid, wk);
+      render();
+    }
+  }
+
+  function startEdit(id) {
+    var w = null;
+    for (var i = 0; i < wk.length; i++) { if (wk[i].id === id) { w = wk[i]; break; } }
+    if (!w) return;
+    editId = id;
+    form = { date: w.date, duration: fmtT(w.minutes), miles: String(w.miles), mile1: w.mile1 != null ? fmtT(w.mile1) : "", mile2: w.mile2 != null ? fmtT(w.mile2) : "", notes: w.notes || "" };
+    setView("log");
+  }
+
+  function showToast() {
+    var t = document.getElementById("toast");
+    t.style.display = "block";
+    setTimeout(function() { t.style.display = "none"; }, 2200);
+  }
+
+  if (uid) render();
+})();
+</script>
+</body>
+</html>
